@@ -4,6 +4,7 @@ import {
   CredentialsExtractor,
   HttpRequest,
   NotImplementedHttpError,
+  TargetExtractor,
   getLoggerFor,
   matchesAuthorizationScheme
 } from "@solid/community-server";
@@ -17,12 +18,13 @@ import {
 export class HttpSigWebIdExtractor extends CredentialsExtractor {
   protected readonly logger = getLoggerFor(this);
 
-  public constructor() {
+  public constructor(private readonly originalUrlExtractor: TargetExtractor) {
     super();
   }
 
-  public async canHandle({ headers }: HttpRequest): Promise<void> {
-    this.logger.info('Attempting to handle HttpSigExtractor')
+  public async canHandle(request: HttpRequest): Promise<void> {
+    const originalUrl = await this.originalUrlExtractor.handleSafe({ request });
+    this.logger.info(`Attempting to handle HttpSigExtractor for URL [${originalUrl.path}]`)
 
     // Implementation should be similar to https://github.com/CommunitySolidServer/CommunitySolidServer/blob/eb0a8f3dba18143b86da0b8a39329a676b2a3c67/src/authentication/DPoPWebIdExtractor.ts#L30-L32
     // in particular it needs to see if the incoming request matches the HttpSig authorisation scheme
